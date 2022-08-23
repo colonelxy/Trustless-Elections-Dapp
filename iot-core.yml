@@ -1,0 +1,37 @@
+# IoT core provides many functions around IoT. You can create certificates to devices, you can set rules to manipulate data such as sending data to lambda function, DynamoDB and so on.
+
+# In this data stream, IoT core has one feature. Just sending IoT data to Kinesis Firehose.
+
+# To sending data to Kinesis Firehose, you need two things. Topic rule and Role attaching topic rule.
+Resources:
+  IoTCoreRuleSendingToKinesis:
+    Type: AWS::IoT::TopicRule
+    Properties:
+      RuleName: ${self:custom.serviceName}_${self:custom.stage}_send_to_kinesis_rule
+      TopicRulePayload:
+        Actions:
+          - Firehose:
+              DeliveryStreamName: !Ref KinesisDeliveryStream
+              RoleArn: !GetAtt KinesisRuleRole.Arn
+        RuleDisabled: false
+        Sql: !Sub
+          SELECT * FROM 'iot/topic'
+
+  KinesisRuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ${self:service}_${self:custom.stage}_sending_to_kinesis_role
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: iot.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: firehose:PutRecord
+                Resource:
+                  - !GetAtt KinesisDeliveryStream.Arn
+          PolicyName: policy

@@ -1,0 +1,83 @@
+# Blockchain Hyperledger for elections in Kenya
+
+# Use permisioned private blockchain accessible by a select number of trusted users and major stakeholders
+# All peers are identified and verified
+
+
+
+# Create user
+
+
+# Security
+# Devices are authenticated before sending any results
+# Only specific biometrically authenticated persons can send results
+# Verified users linked to specific devices for the specific polling center
+
+
+# Trust
+
+# Devices only send data from a specified geolocations restricted to 100m radius of polling location.
+
+# committing peers carefully selected
+
+# Decentralization
+# Devices can be used as nodes
+
+
+
+# Operations
+
+# AWS Kinesis Data Firehose receives and stores the images in private data stores  (S3) for further usage.
+
+# Kinesis Data Firehose provides the simplest approach for capturing, transforming, and loading data streams into AWS data stores. It also supports batching, encryption, and compression of streaming data. Firehose also helps in streaming to RedShift, S3, or ElasticSearch service, to copy data for processing by using additional services. 
+
+
+# Create first S3 bucket to receive data from firehorse
+Resources:
+  S3BucketForKinesisDestination:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ${self:custom.S3BucketNameForKinesisDestination}
+      VersioningConfiguration:
+        Status: Enabled
+    
+Outputs:
+  S3BucketForKinesisDestinationName:
+    Value:
+      Ref: S3BucketForKinesisDestination
+
+# Because S3 is super cheap, we choose S3 as a data lake. You can use Dynamo, Redshift…. if you like.
+
+# diagram iot
+
+# The data flow is
+
+#     Send data from devices to IoT Core via MQTT
+#     IoT Core subscribes data and send it to Kinesis Firehose
+#     Kinesis executes batch (transform data, Putting data together)
+#     Kinesis send batched data to S3
+
+# Actually IoT core could be replaced with API Gateway and send data via HTTP. But because HTTP request is heavier than MQTT, I recommend you use MQTT.
+
+# Kinesis Firehose is used to execute batch. Let’s say the polling stations send data every minute. Kinesis Firehose accept the data then executes a batch which batches the data into 10 minutes pack and send it to S3 thus significantly saving cost.
+
+
+
+# Create the IoT Core serverless
+
+# Lambda function transforms the images to pdf then stores in a second S3 that's public read only
+# All changes are logged and traced
+
+# A second lambda function processes the metadata in S3 and stores in a DynamoDb, a nosql database storage. This is sacalable on demand and saves a lot in operational costs.
+
+# Public access
+# Users can be allowed to see specific data through the shared links
+
+
+
+# Option 2
+# Just upload the image to S3 as attachment together with an electronic form with the same information.
+# The e-form is processed further for tallying
+# The S3 contents have a delete protection.
+# An audit log is generated and securely kept.
+# Metadata from the bucket is processed and stored in NoSql
