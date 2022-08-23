@@ -40,11 +40,23 @@ Resources:
       BucketName: ${self:custom.S3BucketNameForKinesisDestination}
       VersioningConfiguration:
         Status: Enabled
+
+
+  S3BucketForPublicUse:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ${self:custom.S3BucketNameForPublicUse}
+      VersioningConfiguration:
+        Status: Enabled
     
 Outputs:
   S3BucketForKinesisDestinationName:
     Value:
       Ref: S3BucketForKinesisDestination
+
+  S3BucketForPublicUseName:
+    Value:
+      Ref: S3BucketForPublicUse
 
 # Because S3 is super cheap, we choose S3 as a data lake. You can use Dynamo, Redshift…. if you like.
 
