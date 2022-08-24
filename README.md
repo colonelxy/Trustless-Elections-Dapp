@@ -10,29 +10,50 @@ It's very challenging to rig the election at the voter authentication and voting
 
 In this small project we will demonstrate the possibility of securing the votes electronically in a transparent system managed by AWS (Amazon Web Services), the world leader in cloud computing.
 
-We will use Kinesis Data Firehorse to capture data transmitted from the KIEMS kit at the polling stations. The data will be securely and openly stored in S3 (cheap data storage) accessible publicly. The data will be processed and it's metadata stored in DynamoDB (a NoSQL database) for analysis and a ledger generated in AWS Managed Blockchain. Hyperledger will make this whole system decentralised and distributed to verified users (electoral candidates, observers, IEBC e.t.c).
+![Transmission](./Images/elections1.jpeg)
+
+We will use Kinesis Data Firehorse to capture data transmitted from the KIEMS kit at the polling stations. The data will be securely and openly stored in S3 (cheap data storage) accessible publicly. 
+
+Kinesis Data Firehose provides the simplest approach for capturing, transforming, and loading data streams into AWS data stores. It also supports batching, encryption, and compression of streaming data. Firehose also helps in streaming to RedShift, S3, or ElasticSearch service, to copy data for processing by using additional services.
+
+The data will be processed and it's metadata stored in DynamoDB (a NoSQL database) for analysis and a QLDB ledger generated in the AWS Managed Blockchain. Hyperledger Fabric will make this whole system decentralised and distributed to verified users (electoral candidates, observers, IEBC e.t.c).
+
 
 Use permisioned private blockchain accessible by a select number of trusted users and major stakeholders.
 
+### The data flow is
+
+- Send data from devices to IoT Core via MQTT
+- IoT Core subscribes data and send it to - Kinesis Firehose
+- Kinesis executes batch (transform data, - Putting data together)
+- Kinesis send batched data to S3
+
+Actually IoT core could be replaced with API Gateway and send data via HTTP. But because HTTP request is heavier than MQTT, I recommend you use MQTT.
+
+Kinesis Firehose is used to execute batch. Let’s say the polling stations send data every minute. Kinesis Firehose accept the data then executes a batch which batches the data into 10 minutes pack and send it to S3 thus significantly saving cost.
 ## 1. Transmission of results
 ![Transmission](./Images/iot%20main%20plan.png)
 ### Trust
 All peers are identified and verified
-Devices only send data from a specific GPS geolocations
+Devices only send data from a specific GPS geolocations (if possible)
+Only the devices of a specific IP range will be allowed to send their results and an immutable log kept for all to audit.
 committing peers are carefully selected and verified
 
 ### Decentralization
 Devices can be used as nodes to keep a copy of the ledger
-Each peer has a copy of the updated ledger, no single user can make any change
+Each peer has a copy of the updated ledger, no single user can make any change to the ledger except or the new entries by the processing pipeline.
 
 
 ### Security
-![authentication](./Images/elections%20iot.png)
+![authentication](./Images/iot%20main%20plan.png)
 Devices are authenticated before sending any results
 Each device must have a role assigned to it during the configuration stages so it's the only producer that can send data to the Kinesis Firehorse.
 The Kinesis Firehorse too must have a role assigned to it for it to send the collected data to th S3.
 Only specific biometrically authenticated persons can send results
 Users linked to specific devices
+
+The security group will allow incoming connections from a verified range of IP addresses.
+For troubleshooting, the SSH port will only allow an individual IP address to log in via the bastion host.
 
 ### Operations
 One S3 receives and stores the images
@@ -44,47 +65,62 @@ All changes are logged and traced
 ![managed blockchain](./Images/managed%20blockchain.png)
 ### Trust
 The results and analysis are recorded in a publicly available ledge accessible to all registered stakeholders, also known as members or peers. Any of them can compare the end results with the original documents in the first S3 bucket as uploaded by the Iot devices (KIEMS kits).
-The logs in the log bucket are immutable and can be used for ausdit purposes, and any changes made by the admin is logged appropriately, no one can ever manipulate the logs forever, thanks to ``AWS QLB`` (Quantum Ledger Blockchain)
+The logs in the log bucket are immutable and can be used for ausdit purposes, and any changes made by the admin is logged appropriately, no one can ever manipulate the logs forever, thanks to ``AWS QLDB`` (Quantum Ledger Blockchain)
 ### Decentralization
 Peers and members make the ecosystem and make this system decentralised. All stakeholders ahve the same copy and no single member can make a change without the others noticing. The will then reject the fraudulent changes and kick out the untrustable member.
 Each stakeholder to have a separate VPC (Virtual Private Cloud) liked to the Hyperledger as a client with nodes to make it both distributed and decentralised.
+![hyperledger fabric](./Images/ledger1.jpg)
 ### Security
 Specific roles are given to individuals to perform specific duties.
 These are managed by AWS IAM.
 Iot devices access the AWS ecosystem through specified roles and authenticate via Amazon Cognito that strictly allows access only to verified devices and rejects all other trying to trick or hack into the system to place frauduent results.
 
 Every action takes place within the AWS ecosystem so security of dat is assured. Data is encrypted at rest and during transport.
+
+The database (DynamoDB) and quantum ledger (QLDB) will be accessed only form the security group of the Kinesis Firehorse and Lambda, if Lambdas are used to process data.
+small lambda functions are required to convert the images to pdf, organize the files based on counties and constituencies.
 ### Operations
 
-Once transformed, the results are stored as pdf in a second S3
+Once transformed, the results are stored as pdf in a second S3.
+
+Because S3 is super cheap, we choose S3 as a data lake. You can use Dynamo, Redshift…. if you like.
+
 To mitigate the challenge of reading hand written numbers, the sending station should print the data the way cheques are printed with payee details.
 This makes it easy for human and the OCR (Optical character recognition) to get the correct details.
 
 Analysis is done to give verifiable provisional results that anyone can access via a public link or API that updates the IEBC public site.
-Logs and all modifications are added to the QLB secured cryptographycally and rendered immutable. These logs can be made available on request in case of any doubts by the stakeholders.
+Logs and all modifications are added to the QLDB secured cryptographycally and rendered immutable. These logs can be made available on request in case of any doubts by the stakeholders.
 
+# Voter identification/logging
 
+This too can be secured by linking it to a QLDB to log the voting process.
+It will ensure voters are marked and analysed once identified and voted. This will help give a clear picture of totall voters, categorised by poling center, constituency and county. Makes it difficult to ammend the total number of votes cast and alert when a person votes more than once.
+![voting logs](./Images/ledger3.png)
+
+In this diagram, company A is IEBC whereas company B, C, D e.t.c are the major stakeholders outside of IEBC. each to have their VPC in accounts they have full control of to host fabric nodes. These peer nodes keeps copies of the ledger and also acts as concensus and validators.
 ## 3. Access to system
+All access is logged in Cloudtrail and kept secure for audit purposes.
+
+All activity logs are captured via Cloudwatch and logs sored in a secure S3 with alarms assigned for specific metrics.
 ### a. Admin Access
 Have two admins with full access for redundancy purposes.
 ### b. Operators Access
-Have limited access depending on their speifc duties. 
+Have limited access depending on their specific duties. 
 The roles to be granted through a group access.
 
 
 ### c. Stakeholders Access
 ### d. Public access
 Users can be allowed to see specific data through the shared links
+The original images are available to the public.
+Those who prefer the PDFs will also have access from the PDF S3 bucket arranged by county and constituency
 
 
 
-## Voter identification
-
-This too can be secured by linking it to a QLB to log the voting process.
-It will ensure voters are marked and analysed once identified and voted. This will help give a clear picture of totall voters, categorised by poling center, constituency and county. Makes it difficult to ammend the total number of votes cast and alert when a person votes more than once.
+#
 # Option 2
 Just upload the image to S3 as attachment together with an electronic form with the same information.
-The e-form is processed further for tallying
+The e-form is processed further for tallying.
 The S3 contents have a delete protection.
 An audit log is generated and securely kept.
-Metadata from the bucket is processed and stored in DynamoDB (NoSql)
+Metadata from the bucket is processed and stored in DynamoDB (NoSql database)
