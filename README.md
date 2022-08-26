@@ -24,7 +24,7 @@ Use permisioned private blockchain accessible by a select number of trusted user
 
 ### The data flow is
 
-- Send data from devices to IoT Core via MQTT
+- Send data from devices to ``IoT Core`` via ``MQTT``
 - IoT Core subscribes data and send it to - Kinesis Firehose
 - Kinesis executes batch (transform data, Putting data together)
 - Kinesis send batched data to S3 (Raw data)
@@ -34,13 +34,13 @@ Use permisioned private blockchain accessible by a select number of trusted user
 
 Actually IoT core could be replaced with API Gateway and send data via HTTP. But because HTTP request is heavier than MQTT, I recommend you use MQTT.
 
-Kinesis Firehose is used to execute batch. Let’s say the polling stations send data every minute. Kinesis Firehose accept the data then executes a batch which batches the data into 10 minutes pack and send it to S3 thus significantly saving cost.
+``AWS Kinesis Data Firehose`` is used to execute batch. Let’s say the polling stations send data every minute. Kinesis Firehose accept the data then executes a batch which batches the data into 10 minutes pack and send it to S3 thus significantly saving cost.
 ## 1. Transmission of results
 ![Transmission](./Images/iot%20main%20plan.png)
 ### Trust
 All peers are identified and verified
 Devices only send data from a specific GPS geolocations (if possible)
-Only the devices of a specific IP range will be allowed to send their results and an immutable log kept for all to audit.
+Only the devices of a ``specific IP range`` will be allowed to send their results and an immutable log kept for all to audit.
 committing peers are carefully selected and verified
 
 ### Decentralization
@@ -51,9 +51,9 @@ Each peer has a copy of the updated ledger, no single user can make any change t
 ### Security
 
 Devices are authenticated before sending any results
-Each device must have a role assigned to it during the configuration stages so it's the only producer that can send data to the Iot Core.
-Strict security with inbound rules allowing only a range of Ip addresses of the devices.
-Use of VPC endpoints o access other resources from the devices VPC.
+Each device must have a role assigned to it during the configuration stages so it's the only producer that can send data to the ``Iot Core``.
+Strict security with inbound rules allowing only a range of IP addresses of the devices.
+Use of ``VPC endpoints`` to access other resources from the devices VPC.
 VPC endpoint policies
 
 VPC endpoint policies ensures the traffic between AWS services, such as Lambda, Amazon S3, and Amazon QLDB, does not leave the Amazon network.
@@ -70,20 +70,20 @@ Client authentication: AWS IoT supports three types of identity principals for d
 
 
 AWS IoT device data and service endpoints: Each account has several device endpoints that are unique to the account and support specific IoT functions. The AWS IoT device data endpoints support a publish/subscribe protocol that is designed for the communication needs of IoT devices; however, other clients, such as apps and services, can also use this interface if their application requires the specialized features that these endpoints provide. The AWS IoT device service endpoints support device-centric access to security and management services.
-You can also use your own fully-qualified domain name (FQDN), such as iebc.co.ke, and the associated server certificate to connect devices to AWS IoT by using Configurable endpoints.
+You can also use your own ``fully-qualified domain name (FQDN)``, such as iebc.co.ke, and the associated server certificate to connect devices to AWS IoT by using Configurable endpoints.
 
 The Kinesis Firehorse too must have a role assigned to it for it to send the collected data to th S3.
-Use an IAM role and policies to manage temporary credentials for your producer and client applications to access Kinesis Data Firehose delivery streams.
+Use an ``IAM role`` and ``policies`` to manage temporary credentials for your producer and client applications to access Kinesis Data Firehose delivery streams.
 Only specific biometrically authenticated persons can send results
 Users linked to specific devices
 
 
-For troubleshooting, the SSH port will only allow an individual IP address to log in via the bastion host.
+For troubleshooting, the ``SSH port`` will only allow an individual IP address to log in via the ``bastion host``.
 
 ### Operations
 The key steps involved for connecting your device to AWS IoT are:
 
-- Create an EC2 instance and enable the correct port
+- Create an ``EC2 instance`` and enable the correct port
 - Add the app to the EC2 instance
 - Obtain the certificate and private key for the app from AWS IoT
 - Build the device-side application and transfer it along with the certificate and private key, and any other supporting files to the device
@@ -100,52 +100,55 @@ All changes are logged and traced
 
 ### Trust
 The results and analysis are recorded in a publicly available ledge accessible to all registered stakeholders, also known as members or peers. Any of them can compare the end results with the original documents in the first S3 bucket as uploaded by the Iot devices (KIEMS kits).
-The logs in the log bucket are immutable and can be used for audit purposes, and any changes made by the admin is logged appropriately, no one can ever manipulate the logs forever, thanks to ``AWS QLDB`` (Quantum Ledger Blockchain).
+The logs in the log bucket are immutable and can be used for audit purposes, and any changes made are logged appropriately, no one can ever manipulate the logs forever, thanks to ``AWS QLDB`` (Quantum Ledger Blockchain).
 
 ![Transmission](./Images/Iot%20to%20Kinesis%20to%20QLDB.jpeg)
 ### Decentralization
 Peers and members make the ecosystem and make this system decentralised. All stakeholders ahve the same copy and no single member can make a change without the others noticing. The will then reject the fraudulent changes and kick out the untrustable member.
-Each stakeholder to have a separate VPC (Virtual Private Cloud) liked to the Hyperledger as a client with nodes to make it both distributed and decentralised.
+Each stakeholder to have their AWS accounts to host ``Hyperledger fabric nodes`` to make it both distributed and decentralised.
 ![hyperledger fabric](./Images/ledger1.jpg)
+
+Hyperledger fabric up close looks like this for complete distribution and trust:
+![logs in hyperledger fabric](./Images/fabric.jpg)
 ### Security
 Specific roles are given to individuals to perform specific duties.
-These are managed by AWS IAM.
-Iot devices access the AWS ecosystem through specified roles and authenticate via Amazon Cognito that strictly allows access only to verified devices and rejects all other trying to trick or hack into the system to place frauduent results.
+These are managed by ``AWS IAM``.
+Iot devices access the AWS ecosystem through specified roles and authenticate via ``Amazon Cognito`` that strictly allows access only to verified devices and rejects all other trying to trick or hack into the system to place frauduent results.
 
 Every action takes place within the AWS ecosystem so security of data is assured.
 Implement Server-Side Encryption in Dependent Resources. Data is encrypted at rest and during transport.
 
-Use CloudTrail to Monitor API Calls. Using the information collected by CloudTrail, you can determine the request that was made to Kinesis Data Firehose, the IP address from which the request was made, who made the request, when it was made, and additional details.
+Use ``CloudTrail`` to Monitor API Calls. Using the information collected by CloudTrail, you can determine the request that was made to Kinesis Data Firehose, the IP address from which the request was made, who made the request, when it was made, and additional details.
 
-You use AWS published API calls to access Kinesis Data Firehose through the network. Clients must support Transport Layer Security (TLS) 1.2 or later.
-Clients must also support cipher suites with perfect forward secrecy (PFS) such as Ephemeral Diffie-Hellman (DHE) or Elliptic Curve Ephemeral Diffie-Hellman (ECDHE). 
+You use AWS published ``API`` calls to access Kinesis Data Firehose through the network. Clients must support ``Transport Layer Security (TLS) 1.2`` or later.
+Clients must also support cipher suites with perfect forward secrecy (PFS) such as ``Ephemeral Diffie-Hellman (DHE)`` or ``Elliptic Curve Ephemeral Diffie-Hellman (ECDHE)``. 
 
-AWS IoT Device Defender addresses these challenges by providing tools to identify security issues and deviations from best practices. You can use AWS IoT Device Defender to analyze, audit, and monitor connected devices to detect abnormal behavior, and mitigate security risks. AWS IoT Device Defender can audit device fleets to ensure they adhere to security best practices and detect abnormal behavior on devices. This makes it possible to enforce consistent security policies across your AWS IoT device fleet and respond quickly when devices are compromised.
+AWS ``IoT Device Defender`` addresses these challenges by providing tools to identify security issues and deviations from best practices. You can use AWS IoT Device Defender to analyze, audit, and monitor connected devices to detect abnormal behavior, and mitigate security risks. AWS IoT Device Defender can audit device fleets to ensure they adhere to security best practices and detect abnormal behavior on devices. This makes it possible to enforce consistent security policies across your AWS IoT device fleet and respond quickly when devices are compromised.
 
 As a managed service, Amazon QLDB is protected by the AWS global network security procedures.
 
-All data stored in Amazon QLDB is fully encrypted at rest by default. When you access a ledger, QLDB decrypts the data transparently. 
+All data stored in ``Amazon QLDB`` is fully encrypted at rest by default. When you access a ledger, QLDB decrypts the data transparently. 
 
-Amazon QLDB only accepts secure connections that use the HTTPS protocol, which protects network traffic by using SSL/TLS. Encryption in transit provides an additional layer of data protection by encrypting your data as it travels to and from QLDB. 
+Amazon QLDB only accepts secure connections that use the HTTPS protocol, which protects network traffic by using ``SSL/TLS``. Encryption in transit provides an additional layer of data protection by encrypting your data as it travels to and from QLDB. 
 
 
 ### Operations
 
 Once transformed, the results are stored as pdf in a second S3.
 
-Because S3 is super cheap, we choose S3 as a data lake. You can use Dynamo, Redshift…. if you like.
+Because ``S3`` is super cheap, we choose ``S3`` as a data lake. You can use ``DynamoDB``, ``Redshift``…. if you like.
 
 To mitigate the challenge of reading hand written numbers, the sending station should print the data the way cheques are printed with payee details.
-This makes it easy for human and the OCR (Optical character recognition) to get the correct details.
+This makes it easy for human and the ``OCR`` (Optical character recognition) to get the correct details.
 
 Analysis is done to give verifiable provisional results that anyone can access via a public link or API that updates the IEBC public site.
-Logs and all modifications are added to the QLDB secured cryptographycally and rendered immutable. These logs can be made available on request in case of any doubts by the stakeholders.
+Logs and all modifications are added to the ``QLDB`` secured cryptographycally and rendered immutable. These logs can be made available on request in case of any doubts by the stakeholders.
 
 Small lambda functions are required to convert the images to pdf, organize the files based on counties and constituencies.
 
 # Voter identification/logging
 
-This too can be secured by linking it to a QLDB to log the voting process.
+This too can be secured by linking it to a ``QLDB`` to log the voting process.
 It will ensure voters are marked and analysed once identified and voted. This will help give a clear picture of totall voters, categorised by poling center, constituency and county. Makes it difficult to ammend the total number of votes cast and alert when a person votes more than once.
 
 
@@ -153,17 +156,16 @@ It will ensure voters are marked and analysed once identified and voted. This wi
 
 In this diagram, IEBC and the major stakeholders each to have their AWS accounts they have full control of to host fabric client nodes. These fabric nodes keeps copies of the ledger and also acts as concensus and validators of the activitie in the AWS Managed Blockchain peer nodes. 
 
-Hyperledger fabric up close looks like this for complete distribution and trust:
-![logs in hyperledger fabric](./Images/fabric.jpg)
+
 
 Here's how managed blockchain works:
 ![how managed blockchain works](./Images/How%20managed%20blockchain%20works.png)
 ## 3. Access to system
-All access is logged in Cloudtrail and kept secure for audit purposes.
+All access is logged in ``Cloudtrail`` and kept secure for audit purposes.
 
 All activity logs are captured via Cloudwatch and logs sored in a secure S3 with alarms assigned for specific metrics.
 
-AWS IoT Core policies determine what an authenticated identity can do. An authenticated identity is used by devices, mobile applications, web applications, and desktop applications. An authenticated identity can even be a user typing AWS IoT Core CLI commands.
+AWS ``IoT Core`` policies determine what an authenticated identity can do. An authenticated identity is used by devices, mobile applications, web applications, and desktop applications. An authenticated identity can even be a user typing AWS IoT Core CLI commands.
 ### a. Admin Access
 Have two admins with full access for redundancy purposes.
 ### b. Operators Access
@@ -179,11 +181,11 @@ Those who prefer the PDFs will also have access from the PDF S3 bucket arranged 
 
 
 # Option 2
-Just upload the image to S3 as attachment together with an electronic form with the same information.
+Just upload the image to ``S3`` as attachment together with an electronic form with the same information.
 The e-form is processed further for tallying.
 The S3 contents have a delete protection.
-An audit log is generated and securely kept.
-Metadata from the bucket is processed and stored in DynamoDB (NoSql database)
+An audit log is generated and securely kept in ``QLDB``.
+Metadata from the bucket is processed and stored in ``DynamoDB`` (NoSql database) or further analysis
 
 ## Quantum Ledger Cost
 Assuming 16m voters, each message is 1kb
