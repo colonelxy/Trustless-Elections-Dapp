@@ -1,4 +1,4 @@
-# AWS Blockchain Hyperledger Fabric: A Case of Kenyan Elections Management
+# AWS Hyperledger Blockchain: A Case of Kenyan Elections Management
 
 We all know how tense the general elections get in any part of the world, no matter how advaced they claim their  democracy to be.
 
@@ -8,15 +8,16 @@ In the Kenyan scenario, many measures have been put in place over the last 3 dec
 
 It's increasingly challenging to rig the elections at the voter authentication and voting stages, however, a lot requires to be done in the preceeding stages, transmission and tallying. These last two stages involve technology that can be made more verifiable and trustable to apeace everyone involved.
 
-In this small project we will demonstrate the possibility of securing the votes electronically in a transparent secure manner and store data in a cryptographically encrypted ledger managed by AWS (Amazon Web Services), the world leader in cloud computing.
-![Transmission](./Images/Iot%20to%20Kinesis%20to%20QLDB.jpeg)
+In this small project we will demonstrate the possibility of securing the votes electronically in a transparent secure manner and store data in a cryptographically encrypted ledger managed by ``AWS`` (Amazon Web Services), the world leader in cloud computing.
+
+![Transmission](./Images/IOT%20to%20Kinesis%20S3%20QLDB%20DynamoDB.jpeg)
 
 
-We will use Kinesis Data Firehorse to capture data transmitted from the KIEMS kit at the polling stations. The data will be securely and openly stored in S3 (cheap data storage) accessible publicly. 
+We will use ``AWS Kinesis Data Firehorse`` to capture data transmitted from the ``KIEMS`` kit (Kenya Integrated Elections Management System) at the polling stations. The data will be securely and openly stored in S3 (cheap data storage) accessible publicly. 
 
-Kinesis Data Firehose provides the simplest approach for capturing, transforming, and loading data streams into AWS data stores. It also supports batching, encryption, and compression of streaming data. Firehose also helps in streaming to RedShift, S3, or ElasticSearch service, to copy data for processing by using additional services.
+Kinesis Data Firehose provides the simplest approach for capturing, transforming, and loading data streams into AWS data stores. It also supports batching, encryption, and compression of streaming data. Firehose also helps in streaming to ``RedShift``, ``S3``, or ``ElasticSearch`` service, to copy data for processing by using additional services.
 
-The data will be processed and it's metadata stored in DynamoDB (a NoSQL database) for analysis and a QLDB ledger generated in the AWS Managed Blockchain. Hyperledger Fabric will make this whole system decentralised and distributed to verified users (electoral candidates, observers, IEBC e.t.c).
+The data will be processed and it's metadata stored in ``DynamoDB`` (a NoSQL database) for analysis and a ``QLDB`` ledger generated in the AWS Managed Blockchain. Hyperledger Fabric will make this whole system decentralised and distributed to verified users (electoral candidates, observers, IEBC e.t.c).
 
 
 Use permisioned private blockchain accessible by a select number of trusted users and major stakeholders.
@@ -25,8 +26,11 @@ Use permisioned private blockchain accessible by a select number of trusted user
 
 - Send data from devices to IoT Core via MQTT
 - IoT Core subscribes data and send it to - Kinesis Firehose
-- Kinesis executes batch (transform data, - Putting data together)
-- Kinesis send batched data to S3
+- Kinesis executes batch (transform data, Putting data together)
+- Kinesis send batched data to S3 (Raw data)
+- A second Lmbda function sends transformed images as PDF to a second S3
+- A third Lambda function transforms metadata and stores in an immutable ledger in QLDB.
+- Users can query the database through an API
 
 Actually IoT core could be replaced with API Gateway and send data via HTTP. But because HTTP request is heavier than MQTT, I recommend you use MQTT.
 
@@ -93,10 +97,11 @@ All buckets have delete protection
 All changes are logged and traced
 
 ## 2. Processing of results
-![managed blockchain](./Images/managed%20blockchain.pn)
+
 ### Trust
 The results and analysis are recorded in a publicly available ledge accessible to all registered stakeholders, also known as members or peers. Any of them can compare the end results with the original documents in the first S3 bucket as uploaded by the Iot devices (KIEMS kits).
-The logs in the log bucket are immutable and can be used for audit purposes, and any changes made by the admin is logged appropriately, no one can ever manipulate the logs forever, thanks to ``AWS QLDB`` (Quantum Ledger Blockchain)
+The logs in the log bucket are immutable and can be used for audit purposes, and any changes made by the admin is logged appropriately, no one can ever manipulate the logs forever, thanks to ``AWS QLDB`` (Quantum Ledger Blockchain).
+
 ![Transmission](./Images/Iot%20to%20Kinesis%20to%20QLDB.jpeg)
 ### Decentralization
 Peers and members make the ecosystem and make this system decentralised. All stakeholders ahve the same copy and no single member can make a change without the others noticing. The will then reject the fraudulent changes and kick out the untrustable member.
@@ -147,6 +152,9 @@ It will ensure voters are marked and analysed once identified and voted. This wi
 ![logs in hyperledger fabric](./Images/Iot%20to%20QLDB%20to%20Hyperledger.jpeg)
 
 In this diagram, IEBC and the major stakeholders each to have their AWS accounts they have full control of to host fabric client nodes. These fabric nodes keeps copies of the ledger and also acts as concensus and validators of the activitie in the AWS Managed Blockchain peer nodes. 
+
+Hyperledger fabric up close looks like this for complete distribution and trust:
+![logs in hyperledger fabric](./Images/fabric.jpg)
 
 Here's how managed blockchain works:
 ![how managed blockchain works](./Images/How%20managed%20blockchain%20works.png)
