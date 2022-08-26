@@ -1,16 +1,16 @@
-# Blockchain Hyperledger for elections in Kenya
+# AWS Blockchain Hyperledger Fabric: A Case of Kenyan Elections Management
 
-We all know how tense the general elections get in any part of the world, no matter how advaced their democracy claims to be.
+We all know how tense the general elections get in any part of the world, no matter how advaced they claim their  democracy to be.
 
 There are always cases and accusations of electoral malpractices, violent responses by opponents and their supporters, and outright vote rigging to win unfairly.
 
-In the Kenyan scenario, many measures have been put in place over the last 2 decades to mitigate some of these challenges. However, more still need to be done especially in the transmission and tallying of the votes peacefully cast.
+In the Kenyan scenario, many measures have been put in place over the last 3 decades to mitigate some of these challenges. However, more still needs to be done, especially in the transmission and tallying of the votes peacefully cast.
 
-It's very challenging to rig the election at the voter authentication and voting stages, however, a lot requires to be done in the preceeding stages, transmission and tallying. These last two stages involve technology that can be made more verifyable and trustable to apeace eveeryone involved.
+It's increasingly challenging to rig the elections at the voter authentication and voting stages, however, a lot requires to be done in the preceeding stages, transmission and tallying. These last two stages involve technology that can be made more verifiable and trustable to apeace everyone involved.
 
-In this small project we will demonstrate the possibility of securing the votes electronically in a transparent system managed by AWS (Amazon Web Services), the world leader in cloud computing.
+In this small project we will demonstrate the possibility of securing the votes electronically in a transparent secure manner and store data in a cryptographically encrypted ledger managed by AWS (Amazon Web Services), the world leader in cloud computing.
+![Transmission](./Images/Iot%20to%20Kinesis%20to%20QLDB.jpeg)
 
-![Transmission](./Images/elections1.jpeg)
 
 We will use Kinesis Data Firehorse to capture data transmitted from the KIEMS kit at the polling stations. The data will be securely and openly stored in S3 (cheap data storage) accessible publicly. 
 
@@ -45,7 +45,7 @@ Each peer has a copy of the updated ledger, no single user can make any change t
 
 
 ### Security
-![authentication](./Images/iot%20main%20plan.png)
+
 Devices are authenticated before sending any results
 Each device must have a role assigned to it during the configuration stages so it's the only producer that can send data to the Iot Core.
 Strict security with inbound rules allowing only a range of Ip addresses of the devices.
@@ -58,11 +58,11 @@ AWS IoT message security: Device connections to AWS IoT use X.509 client certifi
 when they connect.
 Client authentication: AWS IoT supports three types of identity principals for device or client authentication:
 
-    X.509 client certificates
+ - X.509 client certificates
 
-    IAM users, groups, and roles
+ - IAM users, groups, and roles
 
-    Amazon Cognito identities
+ - Amazon Cognito identities
 
 
 AWS IoT device data and service endpoints: Each account has several device endpoints that are unique to the account and support specific IoT functions. The AWS IoT device data endpoints support a publish/subscribe protocol that is designed for the communication needs of IoT devices; however, other clients, such as apps and services, can also use this interface if their application requires the specialized features that these endpoints provide. The AWS IoT device service endpoints support device-centric access to security and management services.
@@ -97,6 +97,7 @@ All changes are logged and traced
 ### Trust
 The results and analysis are recorded in a publicly available ledge accessible to all registered stakeholders, also known as members or peers. Any of them can compare the end results with the original documents in the first S3 bucket as uploaded by the Iot devices (KIEMS kits).
 The logs in the log bucket are immutable and can be used for audit purposes, and any changes made by the admin is logged appropriately, no one can ever manipulate the logs forever, thanks to ``AWS QLDB`` (Quantum Ledger Blockchain)
+![Transmission](./Images/Iot%20to%20Kinesis%20to%20QLDB.jpeg)
 ### Decentralization
 Peers and members make the ecosystem and make this system decentralised. All stakeholders ahve the same copy and no single member can make a change without the others noticing. The will then reject the fraudulent changes and kick out the untrustable member.
 Each stakeholder to have a separate VPC (Virtual Private Cloud) liked to the Hyperledger as a client with nodes to make it both distributed and decentralised.
@@ -141,10 +142,14 @@ Small lambda functions are required to convert the images to pdf, organize the f
 
 This too can be secured by linking it to a QLDB to log the voting process.
 It will ensure voters are marked and analysed once identified and voted. This will help give a clear picture of totall voters, categorised by poling center, constituency and county. Makes it difficult to ammend the total number of votes cast and alert when a person votes more than once.
-![voting logs](./Images/ledger3.png)
 
-In this diagram, company A is IEBC whereas company B, C, D e.t.c are the major stakeholders outside of IEBC. each to have their VPC in accounts they have full control of to host fabric nodes. These peer nodes keeps copies of the ledger and also acts as concensus and validators.
-![voting logs](./Images/Hyperledger%20managed%20blockchain.jpeg)
+
+![logs in hyperledger fabric](./Images/Iot%20to%20QLDB%20to%20Hyperledger.jpeg)
+
+In this diagram, IEBC and the major stakeholders each to have their AWS accounts they have full control of to host fabric client nodes. These fabric nodes keeps copies of the ledger and also acts as concensus and validators of the activitie in the AWS Managed Blockchain peer nodes. 
+
+Here's how managed blockchain works:
+![how managed blockchain works](./Images/How%20managed%20blockchain%20works.png)
 ## 3. Access to system
 All access is logged in Cloudtrail and kept secure for audit purposes.
 
@@ -165,8 +170,6 @@ The original images are available to the public.
 Those who prefer the PDFs will also have access from the PDF S3 bucket arranged by county and constituency
 
 
-
-#
 # Option 2
 Just upload the image to S3 as attachment together with an electronic form with the same information.
 The e-form is processed further for tallying.
