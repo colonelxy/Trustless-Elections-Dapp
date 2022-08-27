@@ -198,8 +198,7 @@ Assuming 16m voters, each message is 1kb
 | Amazon S3 | Put 370kb data per second |- |
 | AWS Lambda | Invocations by above three services Average 74s duration with 128 MB RAM  | -  |
 | Amazon QLDB | Write input/output from Lambda functions Add average 0.5 KB data per write query |  - |
-| Amazon VPC S3 and API Gateway | VPC Endpoint across 2 availability zones | - 
- |
+| Amazon VPC S3 and API Gateway | VPC Endpoint across 2 availability zones | -|
  | |Total Cost | - |
 ## Results Transmission Cost
 Assuming 47,000 polling stations, each image is 4mb
@@ -212,8 +211,8 @@ Amazon S3| Put 1mb data per second |-
 Amazon S3| 47,000 * 4mb (188GB) data stored |-
 AWS Lambda | Invocations by above three services Average ``74s`` duration with 128 MB RAM  | - 
 Amazon Kinese Firehorse | | -
-Amazon VPC S3 and API Gateway | VPC Endpoint across 2 availability zones | -
-| |Total Cost | - |
+Amazon VPC S3 and API Gateway | VPC Endpoint across 2 availability zones | -| 
+||Total Cost | - |
 
 ## Hyperledger Managed Blockchain Cost
 
@@ -224,4 +223,4 @@ Amazon VPC S3 and API Gateway | VPC Endpoint across 2 availability zones | -
 |Lambda | | -|
 API gateway | | -|
 |Fabric Node | |-|
-|Total Cost| | - |
+||Total Cost|  - |
