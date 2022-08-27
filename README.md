@@ -224,3 +224,10 @@ Amazon VPC S3 and API Gateway | VPC Endpoint across 2 availability zones | -|
 API gateway | | -|
 |Fabric Node | |-|
 ||Total Cost|  - |
+
+
+
+
+## Contributing to this project
+All hands are welcome to make this a reality for many countries and organizations around the world.
+The code is yet to be finalised, but it will, with all your input and experiemnts.
