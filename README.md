@@ -189,27 +189,39 @@ Metadata from the bucket is processed and stored in ``DynamoDB`` (NoSql database
 
 ## Quantum Ledger Cost
 Assuming 16m voters, each message is 1kb
-AWS IoT Core 370 mesages per second published - 
-Amazon API Gateway 370 requests per second received - 
-Amazon S3 Put 370kb data per second -
-AWS Lambda Invocations by above three services
+ 
 
-Average 74s duration with 128 MB RAM  - 
-Amazon QLDB Write input/output from Lambda functions
-
-Add average 0.5 KB data per write query - 
-Amazon VPC S3 and API Gateway VPC Endpoint across 2 availability zones - 
-
+| Resource | Usage | Cost|
+|:--------| :------: | ----:|
+| AWS IoT Core | 370 mesages per second published | - |
+| Amazon API Gateway | 370 requests per second received | -|
+| Amazon S3 | Put 370kb data per second |- |
+| AWS Lambda | Invocations by above three services Average 74s duration with 128 MB RAM  | -  |
+| Amazon QLDB | Write input/output from Lambda functions Add average 0.5 KB data per write query |  - |
+| Amazon VPC S3 and API Gateway | VPC Endpoint across 2 availability zones | - 
+ |
+ | |Total Cost | - |
 ## Results Transmission Cost
 Assuming 47,000 polling stations, each image is 4mb
-AWS IoT Core 47,000 mesages  published - 
-Amazon API Gateway 47,000 requests received - 
-Amazon S3 Put 1mb data per second -
-Amazon S3 47,000 * 4mb (188GB) data stored-
-AWS Lambda Invocations by above three services
 
-Average ``74s`` duration with 128 MB RAM  - 
-Amazon Kinese Firehorse
+| Resource | Usage | Cost|
+|:--------| :------: | ----:|
+|AWS IoT Core| 47,000 mesages  published| - |
+|Amazon API Gateway| 47,000 requests received| - |
+Amazon S3| Put 1mb data per second |-
+Amazon S3| 47,000 * 4mb (188GB) data stored |-
+AWS Lambda | Invocations by above three services Average ``74s`` duration with 128 MB RAM  | - 
+Amazon Kinese Firehorse | | -
+Amazon VPC S3 and API Gateway | VPC Endpoint across 2 availability zones | -
+| |Total Cost | - |
 
- 
-Amazon VPC S3 and API Gateway VPC Endpoint across 2 availability zones -
+## Hyperledger Managed Blockchain Cost
+
+| Resource | Usage | Cost|
+|:--------| :------: | ----:|
+| QLDB | |-
+| lambda | | -
+|Lambda | | -|
+API gateway | | -|
+|Fabric Node | |-|
+|Total Cost| | - |
