@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="http://fargo.io/code/ubuntuFont.css" rel="stylesheet" type="text/css">
+    <script src="http://fargo.io/code/jquery-1.9.1.min.js"></script>
+    <script src="main.js"></script>
+    <title>Vote Transmission and Tally</title>
+</head>
+<body>
+    <div>
+        <p> Total Vote Count: <span id="messageCount"></span></p>
+        <p> Latest Count: <span id="lastMessage"></span></p>
+        <p> latest Update Time: <span id="lastUpdate"></span></p>
+    </div>
+    <script>
+        $(document).ready(WebSocketTest);
+    </script>
+    
+</body>
+</html>
