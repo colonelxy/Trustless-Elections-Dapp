@@ -75,7 +75,10 @@ resource "aws_kinesis_firehose_delivery_stream" "delivery stream" {
 
 # S3 bucket and Kinesis Stream policy to allow the execution to access it 
 
-{
+resource "aws_iam_role" "kinesisRole" {
+  name = "kinesisRole"
+  assume_role_policy = <<EOF
+
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -101,12 +104,15 @@ resource "aws_kinesis_firehose_delivery_stream" "delivery stream" {
         "kinesis:GetRecords"
       ],
       "Resource": "${aws_kinesis_stream.sensor_storage.arn}"
-    }
+    } 
+    
   ]
+  EOF
 }
 
 # Kinesis Data Stream 
 # We will keep the data for 24 hours, which is included in the base price.
+
 resource "aws_kinesis_stream" "sensors" {
   name = "${local.project_name}"
   shard_count = 1
