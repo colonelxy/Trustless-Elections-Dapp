@@ -237,3 +237,114 @@ resource "aws_glue_job" "onboardingSensorFlatteningJob" {
 
   
 }
+
+resource "aws_glue_trigger" "onboardingSensorWorkflowTrigger" {
+  name = "onboardingSensorWorkflowTrigger"
+  type = "SCHEDULED"
+
+  actions {
+    crawlecrawler_name =  aws_glue_job.onboardingSensorDataCrawler.name
+  }
+
+  tags = {
+    Name = iot-onboarding
+  }
+
+  schedule = "cron(0 * ? * * *)"
+  start_on_creation = true
+  
+}
+
+resource "aws_glue_trigger" "onboardingSensorFlatteningJobTrigger" {
+  name = "onboardingSensorFlatteningJobTrigger"
+  type = "SCHEDULED"
+
+  actions {
+    crawlecrawler_name =  aws_glue_job.onboardingSensorFlatteningJob.name
+  }
+
+  tags = {
+    Name = iot-onboarding
+  }
+
+  schedule = "cron(5 * ? * * *)"
+  start_on_creation = true
+}
+
+resource "aws_glue_trigger" "onboardingSensorRefinedTrigger" {
+  name = "onboardingSensorRefinedTrigger"
+  type = "CONDITIONAL"
+
+  actions {
+    crawlecrawler_name =  aws_glue_job.onboardingSensorDataCrawler.name
+  }
+
+  tags = {
+    Name = iot-onboarding
+  }
+
+  schedule = "cron(5 * ? * * *)"
+  start_on_creation = true
+  predicate {
+    JobName = onboardingSensorFlatteningJob
+    LogicalOperator = EQUALS
+    State = SUCCEED
+  }
+  
+}
+
+resource "aws_dynamodb_table" "onboardingSensorTable1" {
+  name = onboardingSensorTable1
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 5
+  write_capacity = 5
+  attribute {
+    name = timestamp
+    type = RANGE
+  }
+  attribute {
+    name = deviceId
+    type = HASH
+  }
+
+  
+}
+
+
+
+
+  attribute {
+    name = "UserId"
+    type = "S"
+  }
+
+  attribute {
+    name = "GameTitle"
+    type = "S"
+  }
+
+  attribute {
+    name = "TopScore"
+    type = "N"
+  }
+
+  ttl {
+    attribute_name = "TimeToExist"
+    enabled        = false
+  }
+
+  global_secondary_index {
+    name               = "GameTitleIndex"
+    hash_key           = "GameTitle"
+    range_key          = "TopScore"
+    write_capacity     = 10
+    read_capacity      = 10
+    projection_type    = "INCLUDE"
+    non_key_attributes = ["UserId"]
+  }
+
+  tags = {
+    Name        = "dynamodb-table-1"
+    Environment = "production"
+  }
+}

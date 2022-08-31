@@ -1,13 +1,34 @@
+# Create a thing 
+# Create a private key, public key and certificate to authenticate with IoT Core 
+# Create an IoT policy for authorization
+# Attach policy to the principal (certificate)
+# Attach thing to the principal (certificate)
+# Create cloudwatch logs with role 
+# * Create Create Cognito identity pool 
+# Setup the thing 
+
+# MTTQ to Kinesis Data Firehorse Requirements
+
+# 1. An IAM role that Amazon IoT can assume to perform the firehose:PutRecord operation. 
+# 2. Since Kinesis Data Firehose will send data to an Amazon S3 bucket,  we'll use Amazon KMS  to encrypt data at rest in Amazon S3, Kinesis Data Firehose must have access to your bucket and permission to use the Amazon KMS key on the caller's behalf. 
+# 3. IOT topic rule 
+
 resource "aws_iot_thing" "iot_phone1" {
     name = "phone1"
+    # id =  
+
   
 }
 
+# Data Ingestion
+# IOT Core configuration 
+
+# Data  from the devices will be sent  using the MQTT protocol to minimize code footprint and network bandwidth. IoT Core can also manage device authentication.
 resource "aws_iot_topic_rule" "iotSendToKinesisRule" {
-    name        = "MyRule"
-    description = "Example rule"
+    name        = "${local.project_name}Kinesis"
+    description = "Kinesis rule"
     enabled     = true
-    sql         = "SELECT * FROM 'topic/test'"
+    sql         = "SELECT * FROM 'topic/${local.iot_topic}'"
     sql_version = "2016-03-23"
 
     sns {
@@ -24,54 +45,124 @@ resource "aws_iot_topic_rule" "iotSendToKinesisRule" {
         }
     }
 
-}
-
-resource "aws_sns_topic" "mytopic" {
-  name = "mytopic"
-}
-
-resource "aws_sns_topic" "myerrortopic" {
-  name = "myerrortopic"
-}
-
-resource "aws_iam_role" "role" {
-  name = "myrole"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "iot.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
+    kinesis {
+      role_arn       = "${aws_iam_role.iot.arn}"
+      stream_name = "${aws_kinesis_stream.sensors.name}"
+      partition_key = "$${newuuid()}"
     }
-  ]
-}
-EOF
+
+    firehose {
+      delivery_stream_name = "${aws_kinesis_firehose_delivery_stream.sensors.name}"
+      role_arn       = "${aws_iam_role.iot.arn}"
+    }
+
 }
 
-resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-  name = "mypolicy"
-  role = aws_iam_role.role.id
+# Firehose delivery stream with destination S3 bucket specified
 
-  policy = <<EOF
+resource "aws_kinesis_firehose_delivery_stream" "delivery stream" {
+  name = "${local.project_name}-s3"
+  destination = "s3"
+
+  s3_configuration {
+    role_arn = "${aws_iam_role.firehorse.arn}"
+    bucket_arn = "${aws_s3_bucket.sensor_storage.arn}"
+    buffer_size = 5
+    buffer_interval = 60
+  }
+  
+}
+
+# S3 bucket and Kinesis Stream policy to allow the execution to access it 
+
 {
   "Version": "2012-10-17",
   "Statement": [
     {
         "Effect": "Allow",
         "Action": [
-            "sns:Publish"
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:AbortMultipartUpload",
+          "s3:GetBucketLocation",
+          "s3:ListBucket",
+          "s3:ListBucketMultipartUploads"
         ],
-        "Resource": "${aws_sns_topic.mytopic.arn}"
+        "Resource": [
+          "${aws_s3_bucket.sensor_storage.arn}",
+          "${aws_s3_bucket.sensor_storage.arn}/*"
+        ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:DescribeStreams",
+        "kinesis:GetShardIterator",
+        "kinesis:GetRecords"
+      ],
+      "Resource": "${aws_kinesis_stream.sensor_storage.arn}"
     }
   ]
 }
-EOF
+
+# Kinesis Data Stream 
+# We will keep the data for 24 hours, which is included in the base price.
+resource "aws_kinesis_stream" "sensors" {
+  name = "${local.project_name}"
+  shard_count = 1
+  retention_period = 24
 }
+
+
+
+
+
+# resource "aws_sns_topic" "mytopic" {
+#   name = "mytopic"
+# }
+
+# resource "aws_sns_topic" "myerrortopic" {
+#   name = "myerrortopic"
+# }
+
+# resource "aws_iam_role" "role" {
+#   name = "myrole"
+
+#   assume_role_policy = <<EOF
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Effect": "Allow",
+#       "Principal": {
+#         "Service": "iot.amazonaws.com"
+#       },
+#       "Action": "sts:AssumeRole"
+#     }
+#   ]
+# }
+# EOF
+# }
+
+# resource "aws_iam_role_policy" "iam_policy_for_lambda" {
+#   name = "mypolicy"
+#   role = aws_iam_role.role.id
+
+#   policy = <<EOF
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#         "Effect": "Allow",
+#         "Action": [
+#             "sns:Publish"
+#         ],
+#         "Resource": "${aws_sns_topic.mytopic.arn}"
+#     }
+#   ]
+# }
+# EOF
+# }
 
 
 

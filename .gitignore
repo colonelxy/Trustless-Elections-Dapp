@@ -4,3 +4,4 @@ serverless.yml
 kinesis.yml
 handler.js
 s3Bucket.yml
+Resources
